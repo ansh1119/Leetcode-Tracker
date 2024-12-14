@@ -1,35 +1,36 @@
 package com.example.anshsleetcodetracker.Screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.anshsleetcodetracker.R
 import com.example.anshsleetcodetracker.ViewModel.AttemptStatus
 import com.example.anshsleetcodetracker.ViewModel.UserViewModel
 import com.example.anshsleetcodetracker.ui.theme.User
-import kotlinx.coroutines.launch
 
 @Composable
 fun UserItem(user: User, userViewModel: UserViewModel) {
@@ -44,11 +45,18 @@ fun UserItem(user: User, userViewModel: UserViewModel) {
     }
 
     Row(
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = user.username)
-        Spacer(modifier = Modifier.padding(30.dp))
-
+        Text(
+            text = user.username,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f)
+        )
         Button(
             onClick = {
                 userViewModel.fetchUsers()
@@ -56,19 +64,19 @@ fun UserItem(user: User, userViewModel: UserViewModel) {
                 userViewModel.checkIfUserAttemptedToday(user.username)
             }
         ) {
-            Image(
-                painter = painterResource(
-                    id = if (done == null) {
-                        R.drawable.baseline_refresh_24
-                    } else if (done == false)
-                        R.drawable.baseline_check_24
-                    else
-                        R.drawable.baseline_block_24
-                ), contentDescription = ""
-            )
+            if (done == null) {
+                Image(
+                    painter = painterResource(id = R.drawable.baseline_refresh_24),
+                    contentDescription = ""
+                )
+            } else if (done == false) {
+                Indicator(color = Color(0xFF00FF00)) // Green
+            } else {
+                Indicator(color = Color(0xFFFF4444)) // Red
+            }
+        }
         }
     }
-}
 
 
 @Composable
@@ -81,23 +89,54 @@ fun ListStudents(username: String, userViewModel: UserViewModel = UserViewModel(
         userViewModel.fetchUsers()
     }
 
-    Scaffold { innerPadding ->
-        Column(
+    Scaffold(
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Black)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "JAVAAAZ",
+                    color = Color(0xFFE7A41F),
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        },
+        containerColor = Color.Black
+    ) { paddingValues ->
+        LazyColumn(
+            contentPadding = paddingValues,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .background(Color.Black)
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 30.dp)
-            ) {
-                items(users) { user ->
-                    UserItem(user = user, userViewModel)
-                }
+            items(users) { user ->
+                UserItem(user = user, userViewModel)
+                HorizontalDivider(
+                    color = Color(0xFFE7A41F),
+                    thickness = 2.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                )
             }
         }
     }
 }
+
+@Composable
+fun Indicator(color: Color) {
+    Box(
+        modifier = Modifier
+            .size(12.dp)
+            .background(color,shape = CircleShape)
+    )
+}
+
+
+
 
 
