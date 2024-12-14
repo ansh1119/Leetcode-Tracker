@@ -9,8 +9,3 @@ data class User(
     val username:String,
     val userDetails: UserDetails
 )
-
-data class UserDetails(
-    val name: String,
-    val email: String
-)
