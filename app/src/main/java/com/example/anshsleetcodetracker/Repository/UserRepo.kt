@@ -1,34 +1,46 @@
 package com.example.anshsleetcodetracker.Repository
 
-import android.util.Log
-import com.example.anshsleetcodetracker.ResultState
-import com.example.anshsleetcodetracker.Retrofit.RetrofitInstance
-import com.example.anshsleetcodetracker.UserService
-import com.example.anshsleetcodetracker.ui.theme.User
 
-class UserRepository {
+import com.example.anshsleetcodetracker.Service.UserService
+import com.example.anshsleetcodetracker.Model.User
+import javax.inject.Inject
+import javax.inject.Singleton
 
-    private val userService: UserService = RetrofitInstance.providesPublicRetrofit()
-        .create(UserService::class.java)
 
-    // Function to save user details
-    suspend fun saveUser(username: String): User {
-        // Call the service to save the user
-        val user = userService.saveUser(username)
-        return user
+@Singleton
+class UserRepository @Inject constructor(
+    private val userService: UserService
+) {
+
+    suspend fun saveUser(language: String, username: String, password: String): User {
+        val response = userService.saveUser(language, username, password)
+
+        if (response.isSuccessful) {
+            // If the response was successful (HTTP 201)
+            return response.body() ?: throw Exception("Failed to create user: No body in response")
+        } else {
+            // Handle error response (HTTP 400 or other)
+            throw Exception("Error creating user: ${response.code()}")
+        }
     }
 
+    suspend fun login(username: String, password: String): Boolean {
+        val response = userService.loginUser(username, password)
 
-    // Function to check if the user attempted today
-    suspend fun hasUserAttemptedToday(username: String): Boolean {
-        return userService.checkUser(username)
+        if (response.isSuccessful) {
+            // If the response is successful (HTTP 200), check the body for the actual result
+            return response.body() ?: false
+        } else {
+            // If the response is not successful (e.g., HTTP 400), handle the error or return false
+            throw Exception("Login failed: ${response.code()}")
+        }
     }
 
-    suspend fun getUsers(): List<User> {
-        return userService.getUsers()
-    }
+}
 
-    suspend fun deleteUser(username: String) {
-        userService.deleteUser(username)
-    }
+
+sealed class Result<out T> {
+    data class Success<out T>(val data: T) : Result<T>()
+    data class Error(val exception: Exception) : Result<Nothing>()
+    object Loading : Result<Nothing>()
 }

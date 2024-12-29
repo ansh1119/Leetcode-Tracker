@@ -1,4 +1,4 @@
-package com.example.anshsleetcodetracker
+package com.example.anshsleetcodetracker.Model
 
 //import kotlinx.serialization.Serializable
 

@@ -1,6 +1,5 @@
-package com.example.anshsleetcodetracker.ui.theme
+package com.example.anshsleetcodetracker.Model
 
-import com.example.anshsleetcodetracker.UserDetails
 //import kotlinx.serialization.Serializable
 
 
