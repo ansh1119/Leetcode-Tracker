@@ -6,5 +6,7 @@ package com.example.anshsleetcodetracker.Model
 //@Serializable
 data class User(
     val username:String,
+    val password:String,
+    val language:String,
     val userDetails: UserDetails
 )

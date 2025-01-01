@@ -34,4 +34,15 @@ interface UserService {
         @Path("username") username: String,
         @Path("password") password: String
     ): Response<Boolean> // Boolean response indicating login success
+
+
+    @GET("getStreakOfUsers/{language}")
+    suspend fun getStreakOfUsers(
+        @Path("language") language: String
+    ): Response<Map<String, List<Boolean>>>
+
+    @GET("/getUser/{username}")
+    suspend fun getUser(
+        @Path("username") username:String
+    ):Response<User>
 }

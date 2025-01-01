@@ -1,7 +1,10 @@
 package com.example.anshsleetcodetracker.ViewModel
 
 import android.annotation.SuppressLint
+import android.net.http.HttpException
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresExtension
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
@@ -11,10 +14,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.anshsleetcodetracker.Repository.UserRepository
 import com.example.anshsleetcodetracker.Helper.ResultState
 import com.example.anshsleetcodetracker.Model.User
+import com.example.anshsleetcodetracker.RetrofitInstance
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
 import javax.inject.Inject
 
 
@@ -54,21 +61,26 @@ class UserViewModel @Inject constructor(
             } catch (e: Exception) {
                 // Handle any errors (e.g., user not found, invalid username)
                 _saveUserState.value = ResultState.Failure(e.message ?: "Unknown error")
-                Log.d("VIEWMODEL", _saveUserState.value.toString())
+                Log.d("VIEWMODEL", e.toString())
             }
         }
     }
 
 
-
-
-    fun loginUser(username:String,password:String){
+    fun loginUser(username: String, password: String) {
         viewModelScope.launch {
             _isLoading.value = true // Set loading state to true
 
             try {
                 val isSuccess = userRepository.login(username, password)
-                _loginResult.value = Result.success(isSuccess) // Emit the login result
+
+                if (isSuccess) {
+                    _loginResult.value = Result.success(isSuccess) // Emit success result
+                } else {
+                    // Emit a failure result with an error message indicating invalid credentials
+                    _loginResult.value =
+                        Result.failure(Exception("Invalid credentials. Please try again."))
+                }
             } catch (e: Exception) {
                 _loginResult.value = Result.failure(e) // Emit the error if login fails
             } finally {
@@ -78,60 +90,53 @@ class UserViewModel @Inject constructor(
     }
 
 
-//    fun checkIfUserAttemptedToday(username: String) {
-//        viewModelScope.launch {
-//            // Update the specific user's status to Loading
-//            _attemptStatuses.value = _attemptStatuses.value + (username to AttemptStatus.Loading)
-//
-//            try {
-//                val hasAttempted = userRepository.hasUserAttemptedToday(username)
-//                // Update the specific user's status to Success
-//                _attemptStatuses.value = _attemptStatuses.value + (username to AttemptStatus.Success(hasAttempted))
-//            } catch (e: Exception) {
-//                // Update the specific user's status to Error
-//                _attemptStatuses.value = _attemptStatuses.value + (username to AttemptStatus.Error(e))
-//            }
-//        }
-//    }
+    private val _userState = mutableStateOf<ResultState<User>>(ResultState.Idle)
+    val userState: State<ResultState<User>> get() = _userState
+
+    fun fetchUserForLoginScreen(username: String) {
+        _userState.value = ResultState.Loading
+
+        viewModelScope.launch {
+            try {
+                val user = userRepository.getUser(username)
+                _userState.value = ResultState.Success(user)
+            } catch (e: Exception) {
+                _userState.value = ResultState.Failure(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    private val _UserState = MutableLiveData<ResultState<User>>(ResultState.Idle)
+    val UserState: LiveData<ResultState<User>> get() = _UserState
+
+    fun fetchUser(username: String) {
+        _UserState.value = ResultState.Loading
+
+        viewModelScope.launch {
+            try {
+                val user = userRepository.getUser(username)
+                _UserState.value = ResultState.Success(user)
+            } catch (e: Exception) {
+                _UserState.value = ResultState.Failure(e.message ?: "Unknown error")
+            }
+        }
+    }
 
 
-//    fun fetchUsers() {
-//        viewModelScope.launch {
-//            try {
-//                val usersList = userRepository.getUsers()
-//                _users.value = usersList // Set the fetched list of users
-//            } catch (e: Exception) {
-//                // Handle exceptions (e.g., network errors)
-//            }
-//        }
-//    }
-//
-//    fun deleteUser(username: String){
-//        viewModelScope.launch {
-//            try {
-//                userRepository.deleteUser(username)
-//            } catch (e:Exception){
-//                Log.d("DELETE ERROR",e.toString())
-//            }
-//        }
-//
-//    }
+    private val _streaks = MutableStateFlow<Map<String, List<Boolean>>?>(null)
+    val streaks: StateFlow<Map<String, List<Boolean>>?> = _streaks
 
-}
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
 
-
-// Define the status states
-sealed class SaveUserStatus {
-    object Idle : SaveUserStatus()
-    object Loading : SaveUserStatus()
-    object Success : SaveUserStatus()
-    data class Error(val exception: Exception) : SaveUserStatus()
-}
-
-// Sealed class to represent different states of the attempt status
-sealed class AttemptStatus {
-    object Idle : AttemptStatus()
-    object Loading : AttemptStatus()
-    data class Success(val hasAttempted: Boolean) : AttemptStatus()
-    data class Error(val exception: Exception) : AttemptStatus()
+    fun fetchStreaks(language: String) {
+        viewModelScope.launch {
+            try {
+                val result = userRepository.getStreakOfUsers(language)
+                _streaks.value = result
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            }
+        }
+    }
 }

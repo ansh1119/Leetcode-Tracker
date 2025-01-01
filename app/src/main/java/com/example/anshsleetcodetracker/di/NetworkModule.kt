@@ -18,7 +18,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://1480-103-72-6-136.ngrok-free.app") // Replace with your API's base URL
+            .baseUrl("https://abdc-103-77-186-96.ngrok-free.app") // Replace with your API's base URL
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
@@ -28,4 +28,6 @@ object NetworkModule {
     fun provideUserService(retrofit: Retrofit): UserService {
         return retrofit.create(UserService::class.java)
     }
+
+
 }

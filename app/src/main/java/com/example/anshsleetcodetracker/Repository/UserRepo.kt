@@ -36,6 +36,27 @@ class UserRepository @Inject constructor(
         }
     }
 
+    suspend fun getUser(username:String): User{
+        val response = userService.getUser(username)
+
+        if (response.isSuccessful) {
+            // If the response was successful (HTTP 201)
+            return response.body() ?: throw Exception("Failed to get user: No body in response")
+        } else {
+            // Handle error response (HTTP 400 or other)
+            throw Exception("Error finding user: ${response.code()}")
+        }
+    }
+
+    suspend fun getStreakOfUsers(language: String): Map<String, List<Boolean>>? {
+        val response = userService.getStreakOfUsers(language)
+        if (response.isSuccessful) {
+            return response.body()
+        } else {
+            throw Exception("Error: ${response.errorBody()?.string()}")
+        }
+    }
+
 }
 
 
